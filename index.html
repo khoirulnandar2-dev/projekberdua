@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Elite Café | Premium POS System</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-overlay">
+        <div class="login-card">
+            <div class="login-header">
+                <i data-lucide="coffee"></i>
+                <h2>L'Elite Café</h2>
+                <p>Silakan login untuk mengakses sistem POS</p>
+            </div>
+            <form id="login-form">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="username" placeholder="Masukkan username" required>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="Masukkan password" required>
+                </div>
+                <button type="submit" class="login-btn">Masuk ke Dashboard</button>
+            </form>
+            <div class="login-footer">
+                <p>&copy; 2026 Admin Panel POS v1.0</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" style="display:none;">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i data-lucide="coffee"></i>
+                    <span>L'Elite Café</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-page="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-page="pos">
+                    <i data-lucide="shopping-cart"></i>
+                    <span>Kasir (POS)</span>
+                </button>
+                <button class="nav-item" data-page="inventory">
+                    <i data-lucide="box"></i>
+                    <span>Stok & Menu</span>
+                </button>
+                <button class="nav-item" data-page="reports">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span>Laporan</span>
+                </button>
+                <button class="nav-item" data-page="settings">
+                    <i data-lucide="settings"></i>
+                    <span>Pengaturan</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">AD</div>
+                    <div class="user-info">
+                        <p class="name">Admin Cafe</p>
+                        <p class="role">Manager</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-bar">
+                <button class="toggle-btn" id="sidebar-toggle"><i data-lucide="menu"></i></button>
+                <h1 id="page-title">Dashboard</h1>
+                <div class="top-bar-actions">
+                    <button class="toggle-btn" id="cart-toggle"><i data-lucide="shopping-cart"></i><span class="badge" id="cart-badge" style="display:none;"></span></button>
+                    <div class="search-bar">
+                        <i data-lucide="search"></i>
+                        <input type="text" placeholder="Cari menu atau transaksi...">
+                    </div>
+                    <div class="notification-container">
+                        <button class="notification-btn" id="notification-trigger">
+                            <i data-lucide="bell"></i>
+                            <span class="badge" id="notification-badge" style="display:none;">0</span>
+                        </button>
+                        <div class="notification-dropdown" id="notification-dropdown">
+                            <div class="notification-dropdown-header">Notifikasi Stok</div>
+                            <div class="notification-dropdown-body" id="notification-list">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="date-time" id="current-time">19:30 | 15 Jun 2026</div>
+                </div>
+            </header>
+
+            <div id="content-pages">
+                <!-- Pages will be rendered here via JS -->
+            </div>
+        </main>
+
+        <!-- Cart Sidebar (Visible only during POS) -->
+        <aside class="cart-panel" id="cart-panel">
+            <div class="cart-header">
+                <h2>Pesanan Baru</h2>
+                <button class="close-cart"><i data-lucide="x"></i></button>
+            </div>
+            <div class="cart-items" id="cart-items-list">
+                <!-- Cart items added here -->
+            </div>
+            <div class="cart-summary">
+                <div class="summary-line">
+                    <span>Subtotal</span>
+                    <span id="subtotal">Rp 0</span>
+                </div>
+                <div class="summary-line">
+                    <span>Pajak (10%)</span>
+                    <span id="tax">Rp 0</span>
+                </div>
+                <div class="summary-total">
+                    <span>Total</span>
+                    <span id="total-price">Rp 0</span>
+                </div>
+                <button class="checkout-btn" id="checkout-trigger">
+                    Bayar Sekarang
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="modal-overlay">
+        <!-- Payment Modal -->
+        <div class="modal" id="payment-modal">
+            <div class="modal-header">
+                <h3>Metode Pembayaran Resmi</h3>
+                <button class="close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="payment-options">
+                <button class="p-option active" data-method="qris">
+                    <i data-lucide="qr-code"></i>
+                    <span>QRIS</span>
+                </button>
+                <button class="p-option" data-method="card">
+                    <i data-lucide="credit-card"></i>
+                    <span>Kartu Debit</span>
+                </button>
+                <button class="p-option" data-method="cash">
+                    <i data-lucide="banknote"></i>
+                    <span>Tunai</span>
+                </button>
+            </div>
+            <div class="payment-content">
+                <div id="qris-view" class="payment-view active">
+                    <div class="qris-box">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=CAFE_LELITE_PAYMENT" alt="QRIS">
+                        <p>Scan QRIS untuk membayar</p>
+                    </div>
+                </div>
+                <div id="card-view" class="payment-view">
+                    <div class="card-box">
+                        <div class="card-chip"></div>
+                        <p>Silakan Masukkan Kartu...</p>
+                        <div class="card-num">**** **** **** 1234</div>
+                    </div>
+                </div>
+                <div id="cash-view" class="payment-view">
+                    <div class="cash-input-group">
+                        <label>Uang Diterima (Rp)</label>
+                        <input type="number" id="cash-amount" placeholder="Contoh: 50000" class="modal-input">
+                        <div class="change-calc">
+                            <span>Kembalian:</span>
+                            <span id="cash-change">Rp 0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="confirm-payment-btn" id="confirm-payment">Konfirmasi Bayar</button>
+        </div>
+
+        <!-- Add/Edit Menu Modal -->
+        <div class="modal" id="menu-modal" style="display:none;">
+            <div class="modal-header">
+                <h3 id="menu-modal-title">Tambah Menu Baru</h3>
+                <button class="close-modal" id="close-menu-modal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="menu-form">
+                <input type="hidden" id="menu-id">
+                <div class="modal-form-group">
+                    <label>Nama Menu</label>
+                    <input type="text" id="menu-name" class="modal-input" placeholder="Contoh: Premium Cappuccino" required>
+                </div>
+                <div class="modal-form-group">
+                    <label>Kategori</label>
+                    <select id="menu-category" class="modal-input" required>
+                        <option value="coffee">Coffee</option>
+                        <option value="non-coffee">Non-Coffee</option>
+                        <option value="pastry">Pastry</option>
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label>Harga (Rp)</label>
+                    <input type="number" id="menu-price" class="modal-input" placeholder="Contoh: 30000" required>
+                </div>
+                <div class="modal-form-group">
+                    <label>Stok Awal</label>
+                    <input type="number" id="menu-stock" class="modal-input" placeholder="Contoh: 50" required>
+                </div>
+                <div class="modal-form-group">
+                    <label>Gambar Menu</label>
+                    <select id="menu-img" class="modal-input">
+                        <option value="images/espresso.png">Espresso (Coffee Default)</option>
+                        <option value="images/matcha.png">Matcha Latte (Non-Coffee Default)</option>
+                        <option value="images/croissant.png">Croissant (Pastry Default)</option>
+                        <option value="custom">URL Gambar Kustom...</option>
+                    </select>
+                    <input type="text" id="menu-img-custom" class="modal-input" placeholder="Masukkan URL gambar (http://...)" style="display:none; margin-top:8px;">
+                </div>
+                <div style="display:flex; gap:15px; margin-top:25px;">
+                    <button type="submit" class="checkout-btn" style="flex:1;">Simpan</button>
+                    <button type="button" class="checkout-btn" id="delete-menu-btn" style="background:#D32F2F; flex:1; display:none;">Hapus Menu</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Receipt / Invoice Modal -->
+        <div class="modal" id="invoice-modal" style="display:none; max-width: 420px; font-family: 'Courier New', Courier, monospace;">
+            <div class="receipt-header" style="text-align:center; margin-bottom:20px;">
+                <h3 id="receipt-store-name" style="font-family:'Outfit',sans-serif; font-size:1.5rem; margin-bottom:5px;">L'Elite Café</h3>
+                <p id="receipt-invoice-id" style="font-size:0.85rem; color:#666; margin-bottom:5px;">INV-123456</p>
+                <p id="receipt-date-time" style="font-size:0.85rem; color:#666;">17/06/2026 11:45</p>
+            </div>
+            <div style="border-top:1px dashed #ccc; margin: 15px 0;"></div>
+            <div id="receipt-items" style="display:flex; flex-direction:column; gap:8px; font-size:0.9rem;">
+                <!-- Populated dynamically -->
+            </div>
+            <div style="border-top:1px dashed #ccc; margin: 15px 0;"></div>
+            <div style="display:flex; flex-direction:column; gap:8px; font-size:0.9rem;">
+                <div style="display:flex; justify-content:space-between;">
+                    <span>Subtotal</span>
+                    <span id="receipt-subtotal">Rp 0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>Pajak (10%)</span>
+                    <span id="receipt-tax">Rp 0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.1rem;">
+                    <span>TOTAL</span>
+                    <span id="receipt-total">Rp 0</span>
+                </div>
+            </div>
+            <div style="border-top:1px dashed #ccc; margin: 15px 0;"></div>
+            <div style="font-size:0.9rem; display:flex; flex-direction:column; gap:5px;">
+                <div style="display:flex; justify-content:space-between;">
+                    <span>Metode Bayar</span>
+                    <span id="receipt-method" style="text-transform:uppercase;">QRIS</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;" id="receipt-cash-row">
+                    <span>Uang Diterima</span>
+                    <span id="receipt-cash-amount">Rp 0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;" id="receipt-change-row">
+                    <span>Kembalian</span>
+                    <span id="receipt-change-amount">Rp 0</span>
+                </div>
+            </div>
+            <div style="border-top:1px dashed #ccc; margin: 15px 0;"></div>
+            <div style="text-align:center; font-size:0.85rem; color:#666; margin-bottom:20px;">
+                <p>Terima kasih atas kunjungan Anda!</p>
+                <p>L'Elite Café - Premium Taste</p>
+            </div>
+            <div style="display:flex; gap:10px;" class="no-print">
+                <button class="checkout-btn" onclick="window.print()" style="flex:1;"><i data-lucide="printer"></i> Cetak</button>
+                <button class="checkout-btn" id="close-invoice-btn" style="background:#888; flex:1;">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
