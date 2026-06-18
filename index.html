@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,12 +9,15 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
     <!-- Login Screen -->
     <div id="login-screen" class="login-overlay">
@@ -105,7 +109,8 @@
                 <button class="toggle-btn" id="sidebar-toggle"><i data-lucide="menu"></i></button>
                 <h1 id="page-title">Dashboard</h1>
                 <div class="top-bar-actions">
-                    <button class="toggle-btn" id="cart-toggle"><i data-lucide="shopping-cart"></i><span class="badge" id="cart-badge" style="display:none;"></span></button>
+                    <button class="toggle-btn" id="cart-toggle"><i data-lucide="shopping-cart"></i><span class="badge"
+                            id="cart-badge" style="display:none;"></span></button>
                     <div class="search-bar">
                         <i data-lucide="search"></i>
                         <input type="text" placeholder="Cari menu atau transaksi...">
@@ -186,8 +191,10 @@
             <div class="payment-content">
                 <div id="qris-view" class="payment-view active">
                     <div class="qris-box">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=CAFE_LELITE_PAYMENT" alt="QRIS">
-                        <p>Scan QRIS untuk membayar</p>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=DANA:085609304319%20Ahmad%20Khoirul%20Nandar%20Ginanzar"
+                            alt="QRIS">
+                        <p>Scan untuk Bayar via DANA<br><strong>085609304319</strong><br>a.n. Ahmad Khoirul Nandar
+                            Ginanzar</p>
                     </div>
                 </div>
                 <div id="card-view" class="payment-view">
@@ -221,7 +228,8 @@
                 <input type="hidden" id="menu-id">
                 <div class="modal-form-group">
                     <label>Nama Menu</label>
-                    <input type="text" id="menu-name" class="modal-input" placeholder="Contoh: Premium Cappuccino" required>
+                    <input type="text" id="menu-name" class="modal-input" placeholder="Contoh: Premium Cappuccino"
+                        required>
                 </div>
                 <div class="modal-form-group">
                     <label>Kategori</label>
@@ -250,19 +258,23 @@
                         <option value="images/cold_brew.png">Cold Brew</option>
                         <option value="custom">URL Gambar Kustom...</option>
                     </select>
-                    <input type="text" id="menu-img-custom" class="modal-input" placeholder="Masukkan URL gambar (http://...)" style="display:none; margin-top:8px;">
+                    <input type="text" id="menu-img-custom" class="modal-input"
+                        placeholder="Masukkan URL gambar (http://...)" style="display:none; margin-top:8px;">
                 </div>
                 <div style="display:flex; gap:15px; margin-top:25px;">
                     <button type="submit" class="checkout-btn" style="flex:1;">Simpan</button>
-                    <button type="button" class="checkout-btn" id="delete-menu-btn" style="background:#D32F2F; flex:1; display:none;">Hapus Menu</button>
+                    <button type="button" class="checkout-btn" id="delete-menu-btn"
+                        style="background:#D32F2F; flex:1; display:none;">Hapus Menu</button>
                 </div>
             </form>
         </div>
 
         <!-- Receipt / Invoice Modal -->
-        <div class="modal" id="invoice-modal" style="display:none; max-width: 420px; font-family: 'Courier New', Courier, monospace;">
+        <div class="modal" id="invoice-modal"
+            style="display:none; max-width: 420px; font-family: 'Courier New', Courier, monospace;">
             <div class="receipt-header" style="text-align:center; margin-bottom:20px;">
-                <h3 id="receipt-store-name" style="font-family:'Outfit',sans-serif; font-size:1.5rem; margin-bottom:5px;">L'Elite Café</h3>
+                <h3 id="receipt-store-name"
+                    style="font-family:'Outfit',sans-serif; font-size:1.5rem; margin-bottom:5px;">L'Elite Café</h3>
                 <p id="receipt-invoice-id" style="font-size:0.85rem; color:#666; margin-bottom:5px;">INV-123456</p>
                 <p id="receipt-date-time" style="font-size:0.85rem; color:#666;">17/06/2026 11:45</p>
             </div>
@@ -306,7 +318,8 @@
                 <p>L'Elite Café - Premium Taste</p>
             </div>
             <div style="display:flex; gap:10px;" class="no-print">
-                <button class="checkout-btn" onclick="window.print()" style="flex:1;"><i data-lucide="printer"></i> Cetak</button>
+                <button class="checkout-btn" onclick="window.print()" style="flex:1;"><i data-lucide="printer"></i>
+                    Cetak</button>
                 <button class="checkout-btn" id="close-invoice-btn" style="background:#888; flex:1;">Tutup</button>
             </div>
         </div>
@@ -318,4 +331,5 @@
         lucide.createIcons();
     </script>
 </body>
+
 </html>

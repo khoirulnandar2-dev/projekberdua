@@ -643,6 +643,10 @@ document.getElementById('checkout-trigger').addEventListener('click', () => {
 });
 
 function resetPaymentModal() {
+    // Pastikan modal pembayaran tampil dan modal lain sembunyi
+    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    document.getElementById('payment-modal').style.display = 'block';
+
     // Reset to QRIS by default
     document.querySelectorAll('.p-option').forEach(opt => opt.classList.remove('active'));
     document.querySelector('[data-method="qris"]').classList.add('active');
@@ -667,6 +671,15 @@ function resetPaymentModal() {
     const cashChange = document.getElementById('cash-change');
     if (cashInput) cashInput.value = '';
     if (cashChange) cashChange.textContent = settings.currency === 'USD' ? '$ 0.00' : 'Rp 0';
+
+    // Update QR Code dinamis dengan total harga
+    const qrisImg = document.querySelector('#qris-view img');
+    if (qrisImg) {
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const total = subtotal + Math.round(subtotal * TAX_RATE);
+        const qrData = `DANA:085609304319 Ahmad Khoirul Nandar Ginanzar | Total: ${formatPrice(total)}`;
+        qrisImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
+    }
 }
 
 // Payment method switching
@@ -852,6 +865,7 @@ function setupMenuModalListeners() {
 }
 
 document.getElementById('confirm-payment').addEventListener('click', () => {
+    const btn = document.getElementById('confirm-payment');
     const activeMethod = document.querySelector('.p-option.active').dataset.method;
 
     if (activeMethod === 'cash') {
@@ -865,7 +879,20 @@ document.getElementById('confirm-payment').addEventListener('click', () => {
         }
     }
 
-    completeTransaction(activeMethod);
+    // Simulasi proses verifikasi untuk QRIS dan Kartu
+    if (activeMethod === 'qris' || activeMethod === 'card') {
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = activeMethod === 'qris' ? 'Memverifikasi Pembayaran...' : 'Memproses Kartu...';
+
+        setTimeout(() => {
+            completeTransaction(activeMethod);
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }, 2000);
+    } else {
+        completeTransaction(activeMethod);
+    }
 });
 
 function completeTransaction(method) {
@@ -1082,7 +1109,7 @@ function showReceiptModal(sale) {
     document.getElementById('receipt-tax').textContent = formatPrice(sale.tax);
     document.getElementById('receipt-total').textContent = formatPrice(sale.total);
 
-    document.getElementById('receipt-method').textContent = sale.method;
+    document.getElementById('receipt-method').textContent = sale.method === 'qris' ? 'QRIS (DANA)' : sale.method;
 
     const cashRow = document.getElementById('receipt-cash-row');
     const changeRow = document.getElementById('receipt-change-row');
