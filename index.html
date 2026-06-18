@@ -26,14 +26,28 @@
             <form id="login-form">
                 <div class="input-group">
                     <label>Username</label>
-                    <input type="text" id="username" placeholder="Masukkan username" required>
+                    <input type="text" id="username" placeholder="Masukkan username" required autocomplete="off">
                 </div>
                 <div class="input-group">
                     <label>Password</label>
                     <input type="password" id="password" placeholder="Masukkan password" required>
                 </div>
-                <button type="submit" class="login-btn">Masuk ke Dashboard</button>
+                <div id="login-error" class="login-error-msg" style="display:none;"></div>
+                <button type="submit" class="login-btn" id="login-submit-btn">Masuk ke Dashboard</button>
             </form>
+            <div class="login-role-hint">
+                <div class="hint-title">Akun Tersedia</div>
+                <div class="hint-accounts">
+                    <div class="hint-account admin">
+                        <span class="hint-role-badge admin">ADMIN</span>
+                        <span>Akses penuh semua fitur</span>
+                    </div>
+                    <div class="hint-account manager">
+                        <span class="hint-role-badge manager">MANAGER</span>
+                        <span>Dashboard, Kasir &amp; Laporan</span>
+                    </div>
+                </div>
+            </div>
             <div class="login-footer">
                 <p>&copy; 2026 Admin Panel POS v1.0</p>
             </div>
@@ -73,11 +87,14 @@
             </nav>
             <div class="sidebar-footer">
                 <div class="user-profile">
-                    <div class="avatar">AD</div>
+                    <div class="avatar" id="sidebar-avatar">AD</div>
                     <div class="user-info">
-                        <p class="name">Admin Cafe</p>
-                        <p class="role">Manager</p>
+                        <p class="name" id="sidebar-username">Admin Cafe</p>
+                        <p class="role" id="sidebar-role-text">Loading...</p>
                     </div>
+                    <button class="logout-btn" id="logout-btn" title="Logout">
+                        <i data-lucide="log-out"></i>
+                    </button>
                 </div>
             </div>
         </aside>
@@ -228,6 +245,9 @@
                         <option value="images/espresso.png">Espresso (Coffee Default)</option>
                         <option value="images/matcha.png">Matcha Latte (Non-Coffee Default)</option>
                         <option value="images/croissant.png">Croissant (Pastry Default)</option>
+                        <option value="images/caramel_macchiato.png">Caramel Macchiato</option>
+                        <option value="images/vanilla_muffin.png">Vanilla Bean Muffin</option>
+                        <option value="images/cold_brew.png">Cold Brew</option>
                         <option value="custom">URL Gambar Kustom...</option>
                     </select>
                     <input type="text" id="menu-img-custom" class="modal-input" placeholder="Masukkan URL gambar (http://...)" style="display:none; margin-top:8px;">

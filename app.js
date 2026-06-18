@@ -3,9 +3,9 @@ let products = JSON.parse(localStorage.getItem('cafe_products')) || [
     { id: 1, name: 'Premium Espresso', price: 25000, category: 'coffee', stock: 50, img: 'images/espresso.png' },
     { id: 2, name: 'Matcha Latte Luxury', price: 35000, category: 'coffee', stock: 30, img: 'images/matcha.png' },
     { id: 3, name: 'Golden Croissant', price: 28000, category: 'pastry', stock: 20, img: 'images/croissant.png' },
-    { id: 4, name: 'Caramel Macchiato', price: 38000, category: 'coffee', stock: 40, img: 'images/espresso.png' },
-    { id: 5, name: 'Vanilla Bean Muffin', price: 22000, category: 'pastry', stock: 15, img: 'images/croissant.png' },
-    { id: 6, name: 'Cold Brew Elite', price: 32000, category: 'coffee', stock: 25, img: 'images/espresso.png' }
+    { id: 4, name: 'Caramel Macchiato', price: 38000, category: 'coffee', stock: 40, img: 'images/caramel_macchiato.png' },
+    { id: 5, name: 'Vanilla Bean Muffin', price: 22000, category: 'pastry', stock: 15, img: 'images/vanilla_muffin.png' },
+    { id: 6, name: 'Cold Brew Elite', price: 32000, category: 'coffee', stock: 25, img: 'images/cold_brew.png' }
 ];
 
 let cart = [];
@@ -36,8 +36,26 @@ const pageTitle = document.getElementById('page-title');
 const cartPanel = document.getElementById('cart-panel');
 const modalOverlay = document.getElementById('modal-overlay');
 
+// User Accounts & Roles
+const USERS = [
+    {
+        username: 'admin',
+        password: 'admin123',
+        role: 'Admin',
+        displayName: 'Admin Cafe',
+        avatar: 'AD',
+        avatarColor: '#A98467'
+    }
+];
+
+// Role-based access control
+const ROLE_PERMISSIONS = {
+    Admin: ['dashboard', 'pos', 'inventory', 'reports', 'settings'],
+};
+
 // App Initialization
 function init() {
+    migrateProductImages();
     applySettings();
     processLogin();
     setupNavigation();
@@ -46,6 +64,23 @@ function init() {
     updateNotifications();
     updateClock();
     setInterval(updateClock, 1000);
+}
+
+// Migrate old product images to new unique ones
+function migrateProductImages() {
+    if (localStorage.getItem('cafe_images_migrated')) return;
+    const imageMap = {
+        4: 'images/caramel_macchiato.png',
+        5: 'images/vanilla_muffin.png',
+        6: 'images/cold_brew.png'
+    };
+    products.forEach(p => {
+        if (imageMap[p.id] && p.img !== imageMap[p.id]) {
+            p.img = imageMap[p.id];
+        }
+    });
+    localStorage.setItem('cafe_products', JSON.stringify(products));
+    localStorage.setItem('cafe_images_migrated', 'true');
 }
 
 function applySettings() {
@@ -58,37 +93,124 @@ function applySettings() {
     if (loginTitle) loginTitle.textContent = settings.storeName;
 }
 
+function getCurrentUser() {
+    const role = sessionStorage.getItem('userRole');
+    const username = sessionStorage.getItem('userUsername');
+    return USERS.find(u => u.username === username && u.role === role) || null;
+}
+
+function updateSidebarProfile(user) {
+    const avatarEl = document.getElementById('sidebar-avatar');
+    const nameEl = document.getElementById('sidebar-username');
+    const roleEl = document.getElementById('sidebar-role-text');
+    if (!avatarEl || !nameEl || !roleEl) return;
+
+    avatarEl.textContent = user.avatar;
+    avatarEl.style.background = user.avatarColor;
+    nameEl.textContent = user.displayName;
+
+    // Render role badge
+    const badgeClass = 'role-badge-admin'; // Only Admin role exists now
+    roleEl.innerHTML = `<span class="role-chip ${badgeClass}">${user.role}</span>`;
+}
+
+function applyRolePermissions(role) {
+    const allowed = ROLE_PERMISSIONS[role] || [];
+    document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
+        const page = btn.dataset.page;
+        if (allowed.includes(page)) {
+            btn.style.display = 'flex';
+        } else {
+            btn.style.display = 'none';
+        }
+    });
+}
+
 function processLogin() {
     const loginForm = document.getElementById('login-form');
     const loginScreen = document.getElementById('login-screen');
     const appContainer = document.querySelector('.app-container');
+    const errorMsg = document.getElementById('login-error');
+    const submitBtn = document.getElementById('login-submit-btn');
 
-    // Check if already logged in (optional persistence)
+    // Check if already logged in
     if (sessionStorage.getItem('isLoggedIn') === 'true') {
-        loginScreen.style.display = 'none';
-        appContainer.style.display = 'flex';
-        renderPage('dashboard');
+        const user = getCurrentUser();
+        if (user) {
+            loginScreen.style.display = 'none';
+            appContainer.style.display = 'flex';
+            applyRolePermissions(user.role);
+            updateSidebarProfile(user);
+            renderPage('dashboard');
+            setupLogoutButton();
+        } else {
+            // Invalid session, clear it
+            sessionStorage.clear();
+        }
     }
 
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const user = document.getElementById('username').value;
-        const pass = document.getElementById('password').value;
+        const inputUser = document.getElementById('username').value.trim().toLowerCase();
+        const inputPass = document.getElementById('password').value;
 
-        // Simple default credentials for demo
-        if (user === 'admin' && pass === 'admin123') {
+        const matched = USERS.find(
+            u => u.username === inputUser && u.password === inputPass
+        );
+
+        if (matched) {
+            // Hide error
+            errorMsg.style.display = 'none';
+
+            // Animate button
+            submitBtn.textContent = 'Memuat...';
+            submitBtn.disabled = true;
+
             sessionStorage.setItem('isLoggedIn', 'true');
-            
-            // Simple animation
+            sessionStorage.setItem('userRole', matched.role);
+            sessionStorage.setItem('userUsername', matched.username);
+
             loginScreen.style.opacity = '0';
             setTimeout(() => {
                 loginScreen.style.display = 'none';
                 appContainer.style.display = 'flex';
+                applyRolePermissions(matched.role);
+                updateSidebarProfile(matched);
                 renderPage('dashboard');
+                setupLogoutButton();
                 if (window.lucide) lucide.createIcons();
+                submitBtn.textContent = 'Masuk ke Dashboard';
+                submitBtn.disabled = false;
             }, 500);
         } else {
-            alert("Username atau Password salah!");
+            // Show error message
+            errorMsg.textContent = 'Username atau Password salah!';
+            errorMsg.style.display = 'block';
+            // Shake animation
+            loginForm.classList.add('shake');
+            setTimeout(() => loginForm.classList.remove('shake'), 600);
+        }
+    });
+}
+
+function setupLogoutButton() {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (!logoutBtn) return;
+    // Clone to remove old listeners
+    const newBtn = logoutBtn.cloneNode(true);
+    logoutBtn.parentNode.replaceChild(newBtn, logoutBtn);
+    newBtn.addEventListener('click', () => {
+        if (confirm('Apakah Anda yakin ingin logout?')) {
+            sessionStorage.clear();
+            const appContainer = document.querySelector('.app-container');
+            const loginScreen = document.getElementById('login-screen');
+            appContainer.style.display = 'none';
+            loginScreen.style.display = 'flex';
+            loginScreen.style.opacity = '1';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('login-error').style.display = 'none';
+            if (window.lucide) lucide.createIcons();
         }
     });
 }
@@ -110,7 +232,7 @@ function setupNavigation() {
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
             const activePage = document.querySelector('.nav-item.active').dataset.page;
-            
+
             if (activePage === 'pos') {
                 const filtered = products.filter(p => p.name.toLowerCase().includes(query));
                 renderProductGrid(filtered);
@@ -124,7 +246,7 @@ function setupNavigation() {
 
 function renderPage(page) {
     pageTitle.textContent = page.charAt(0).toUpperCase() + page.slice(1);
-    
+
     // Hide cart by default, show it only for POS
     if (page === 'pos') {
         cartPanel.style.display = 'flex';
@@ -132,14 +254,14 @@ function renderPage(page) {
         cartPanel.style.display = 'none';
     }
 
-    switch(page) {
+    switch (page) {
         case 'dashboard': renderDashboard(); break;
         case 'pos': renderPOS(); break;
         case 'inventory': renderInventory(); break;
         case 'reports': renderReports(); break;
         case 'settings': renderSettings(); break;
     }
-    
+
     if (window.lucide) lucide.createIcons();
 }
 
@@ -147,12 +269,12 @@ function renderPage(page) {
 function renderDashboard() {
     const totalRevenue = salesHistory.reduce((sum, s) => sum + s.total, 0);
     const totalTransactions = salesHistory.length;
-    
+
     // Total items sold should sum all 'qty' from all items in all sales
     const itemsSold = salesHistory.reduce((sum, sale) => {
         return sum + sale.items.reduce((innerSum, item) => innerSum + item.qty, 0);
     }, 0);
-    
+
     const lowStockCount = products.filter(p => p.stock > 0 && p.stock < 10).length;
     const outOfStockCount = products.filter(p => p.stock <= 0).length;
 
@@ -256,7 +378,7 @@ function renderProductGrid(items) {
 window.filterCategory = (cat) => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     event.target.classList.add('active');
-    
+
     if (cat === 'all') {
         renderProductGrid(products);
     } else {
@@ -271,7 +393,7 @@ window.addToCart = (productId) => {
         alert("Maaf, stok habis!");
         return;
     }
-    
+
     const existing = cart.find(item => item.id === productId);
     if (existing) {
         existing.qty++;
@@ -357,7 +479,7 @@ function renderInventoryTable(items) {
         let statusText = 'Tersedia';
         if (p.stock <= 0) { statusClass = 'stock-out'; statusText = 'Habis'; }
         else if (p.stock < 10) { statusClass = 'stock-low'; statusText = 'Menipis'; }
-        
+
         return `
         <tr>
             <td><img src="${p.img}" style="width:40px;height:40px;border-radius:8px"></td>
@@ -439,6 +561,29 @@ function renderReports() {
 
 // --- Settings Logic ---
 function renderSettings() {
+    const user = getCurrentUser();
+
+    // Access guard: only Admin can access settings
+    if (!user || user.role !== 'Admin') {
+        pagesContainer.innerHTML = `
+            <div class="access-denied-container">
+                <div class="access-denied-card">
+                    <div class="access-denied-icon">
+                        <i data-lucide="shield-off"></i>
+                    </div>
+                    <h2>Akses Ditolak</h2>
+                    <p>Halaman <strong>Pengaturan</strong> hanya dapat diakses oleh <strong>Admin</strong>.</p>
+                    <p class="access-denied-sub">Akun Anda memiliki role <span class="role-chip role-badge-admin">${user ? user.role : 'Unknown'}</span> dan tidak memiliki izin untuk mengubah pengaturan sistem.</p>
+                    <button onclick="renderPage('dashboard')" class="checkout-btn" style="width:auto; padding:12px 30px; margin-top:10px;">
+                        <i data-lucide="arrow-left"></i> Kembali ke Dashboard
+                    </button>
+                </div>
+            </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+    }
+
     pagesContainer.innerHTML = `
         <div class="settings-container" style="max-width: 600px;">
             <div class="inventory-container">
@@ -470,7 +615,7 @@ function renderSettings() {
 window.saveSettings = () => {
     const storeNameInput = document.getElementById('store-name-input');
     const currencySelect = document.getElementById('currency-select');
-    
+
     if (storeNameInput && currencySelect) {
         settings.storeName = storeNameInput.value.trim() || "L'Elite Café";
         settings.currency = currencySelect.value;
@@ -503,7 +648,7 @@ function resetPaymentModal() {
     document.querySelector('[data-method="qris"]').classList.add('active');
     document.querySelectorAll('.payment-view').forEach(view => view.classList.remove('active'));
     document.getElementById('qris-view').classList.add('active');
-    
+
     // Update cash label and placeholder based on currency
     const cashLabel = document.querySelector('.cash-input-group label');
     const cashIn = document.getElementById('cash-amount');
@@ -529,7 +674,7 @@ document.querySelectorAll('.p-option').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.p-option').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        
+
         const method = btn.dataset.method;
         document.querySelectorAll('.payment-view').forEach(v => v.classList.remove('active'));
         document.getElementById(`${method}-view`).classList.add('active');
@@ -546,7 +691,7 @@ if (cashInput) {
         const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
         const tax = Math.round(subtotal * TAX_RATE);
         const total = subtotal + tax;
-        
+
         if (settings.currency === 'USD') {
             const totalUSD = total / 15000;
             const change = amount - totalUSD;
@@ -589,7 +734,7 @@ window.openAddMenuModal = () => {
 
     document.getElementById('menu-modal-title').textContent = 'Tambah Menu Baru';
     document.getElementById('delete-menu-btn').style.display = 'none';
-    
+
     modalOverlay.style.display = 'flex';
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
     document.getElementById('menu-modal').style.display = 'block';
@@ -608,8 +753,9 @@ window.openEditMenuModal = (id) => {
 
     const imgSelect = document.getElementById('menu-img');
     const customImgInput = document.getElementById('menu-img-custom');
-    
-    if (product.img === 'images/espresso.png' || product.img === 'images/matcha.png' || product.img === 'images/croissant.png') {
+
+    const builtInImages = ['images/espresso.png', 'images/matcha.png', 'images/croissant.png', 'images/caramel_macchiato.png', 'images/vanilla_muffin.png', 'images/cold_brew.png'];
+    if (builtInImages.includes(product.img)) {
         imgSelect.value = product.img;
         customImgInput.style.display = 'none';
         customImgInput.value = '';
@@ -653,7 +799,7 @@ function setupMenuModalListeners() {
             const category = document.getElementById('menu-category').value;
             const price = parseInt(document.getElementById('menu-price').value) || 0;
             const stock = parseInt(document.getElementById('menu-stock').value) || 0;
-            
+
             let img = imgSelect.value;
             if (img === 'custom') {
                 img = customImgInput.value.trim() || 'images/espresso.png';
@@ -678,7 +824,7 @@ function setupMenuModalListeners() {
 
             saveData();
             modalOverlay.style.display = 'none';
-            
+
             // Refresh current view
             const activePage = document.querySelector('.nav-item.active').dataset.page;
             renderPage(activePage);
@@ -695,7 +841,7 @@ function setupMenuModalListeners() {
                 products = products.filter(p => p.id !== productId);
                 saveData();
                 modalOverlay.style.display = 'none';
-                
+
                 // Refresh current view
                 const activePage = document.querySelector('.nav-item.active').dataset.page;
                 renderPage(activePage);
@@ -707,7 +853,7 @@ function setupMenuModalListeners() {
 
 document.getElementById('confirm-payment').addEventListener('click', () => {
     const activeMethod = document.querySelector('.p-option.active').dataset.method;
-    
+
     if (activeMethod === 'cash') {
         const amount = parseFloat(cashInput.value) || 0;
         const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
@@ -718,7 +864,7 @@ document.getElementById('confirm-payment').addEventListener('click', () => {
             return;
         }
     }
-    
+
     completeTransaction(activeMethod);
 });
 
@@ -747,11 +893,11 @@ function completeTransaction(method) {
 
     salesHistory.push(newSale);
     saveData();
-    
+
     // Reset Cart
     cart = [];
     updateCartUI();
-    
+
     showReceiptModal(newSale);
 }
 
@@ -777,16 +923,16 @@ function initChart() {
     // Generate last 7 days data dynamically
     const labels = [];
     const data = [];
-    
+
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        
+
         // Get day label (in Indonesian)
         let dayName = d.toLocaleDateString('id-ID', { weekday: 'short' });
         dayName = dayName.replace('.', ''); // Clean dots (like "Sen.")
         labels.push(dayName);
-        
+
         // Match transactions on this day
         const targetDateStr = d.toLocaleDateString();
         const dailySales = salesHistory.filter(sale => {
@@ -796,7 +942,7 @@ function initChart() {
             }
             return sale.date === targetDateStr;
         });
-        
+
         const dailyTotal = dailySales.reduce((sum, s) => sum + s.total, 0);
         if (settings.currency === 'USD') {
             data.push(parseFloat((dailyTotal / 15000).toFixed(2)));
@@ -836,13 +982,13 @@ init();
 function setupNotificationListeners() {
     const trigger = document.getElementById('notification-trigger');
     const dropdown = document.getElementById('notification-dropdown');
-    
+
     if (trigger && dropdown) {
         trigger.addEventListener('click', (e) => {
             e.stopPropagation();
             dropdown.classList.toggle('active');
         });
-        
+
         document.addEventListener('click', (e) => {
             if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
                 dropdown.classList.remove('active');
@@ -862,7 +1008,7 @@ function updateNotifications() {
     if (count > 0) {
         badge.textContent = count;
         badge.style.display = 'flex';
-        
+
         list.innerHTML = warningItems.map(p => {
             const isOut = p.stock <= 0;
             const iconClass = isOut ? 'out' : 'low';
@@ -940,13 +1086,13 @@ function showReceiptModal(sale) {
 
     const cashRow = document.getElementById('receipt-cash-row');
     const changeRow = document.getElementById('receipt-change-row');
-    
+
     if (sale.method === 'cash') {
         cashRow.style.display = 'flex';
         changeRow.style.display = 'flex';
-        
+
         const cashAmount = parseFloat(document.getElementById('cash-amount').value) || 0;
-        
+
         if (settings.currency === 'USD') {
             document.getElementById('receipt-cash-amount').textContent = `$ ${cashAmount.toFixed(2)}`;
             const totalUSD = sale.total / 15000;
